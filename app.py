@@ -7,7 +7,14 @@ st.write("Learn Cybersecurity in a simple and interactive way!")
 
 topic = st.text_input("Enter a cybersecurity topic:", "Phishing")
 
+if "show_content" not in st.session_state:
+    st.session_state.show_content = False
+
 if st.button("Teach Me"):
+    st.session_state.show_content = True
+
+if st.session_state.show_content:
+
     st.header(f"📚 Topic: {topic}")
 
     st.subheader("Definition")
@@ -21,6 +28,7 @@ if st.button("Teach Me"):
     )
 
     st.subheader("Quick Quiz")
+
     answer = st.radio(
         "Which of the following is the safest action?",
         [
