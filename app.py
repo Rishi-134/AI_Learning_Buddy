@@ -1,19 +1,42 @@
 import streamlit as st
 import google.generativeai as genai
 
-# ------------------ Gemini API ------------------
-genai.configure(api_key="YOUR_GEMINI_API_KEY")
-model = genai.GenerativeModel("gemini-2.5-flash")
+# -----------------------------
+# Page Configuration
+# -----------------------------
+st.set_page_config(
+    page_title="CyberSage AI",
+    page_icon="🛡️",
+    layout="wide"
+)
 
-# ------------------ Page ------------------
-st.set_page_config(page_title="CyberSage AI", page_icon="🛡️")
+st.title("🛡️ CyberSage AI - AI Learning Buddy")
+st.write(
+    "An AI-powered learning assistant for Cybersecurity and Artificial Intelligence."
+)
 
-st.title("🛡️ CyberSage AI - Learning Buddy")
-st.write("Learn Cybersecurity and AI concepts using Gemini AI!")
+# -----------------------------
+# Configure Gemini
+# -----------------------------
+try:
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    model = genai.GenerativeModel("gemini-2.5-flash")
+except Exception:
+    st.error("Gemini API Key not found. Please configure it in Streamlit Secrets.")
+    st.stop()
 
-topic = st.text_input("Enter a Topic")
+# -----------------------------
+# Session State
+# -----------------------------
+if "response" not in st.session_state:
+    st.session_state.response = ""
 
-option = st.selectbox(
+# -----------------------------
+# User Input
+# -----------------------------
+topic = st.text_input("Enter Topic")
+
+activity = st.selectbox(
     "Choose Activity",
     [
         "Explain Topic",
@@ -24,25 +47,28 @@ option = st.selectbox(
     ]
 )
 
-# Store output
-if "response" not in st.session_state:
-    st.session_state.response = ""
-
 learner_answer = ""
 
-if option == "Evaluate Learner Answer":
-    learner_answer = st.text_area("Paste the learner's answer here")
+if activity == "Evaluate Learner Answer":
+    learner_answer = st.text_area(
+        "Paste Learner's Answer"
+    )
 
+# -----------------------------
+# Generate Button
+# -----------------------------
 if st.button("Generate"):
 
     if topic.strip() == "":
         st.warning("Please enter a topic.")
     else:
 
-        if option == "Explain Topic":
+        if activity == "Explain Topic":
 
             prompt = f"""
-You are an expert instructor. Explain the topic "{topic}" to a complete beginner using simple language.
+You are an expert instructor.
+
+Explain the topic "{topic}" to a complete beginner using simple language.
 
 Define the concept.
 
@@ -54,49 +80,63 @@ List its key components.
 
 Mention common applications.
 
-End with a short summary and three important points to remember.
+End with:
+
+• Short Summary
+
+• Three Important Points to Remember.
 """
 
-        elif option == "Real-Life Example":
+        elif activity == "Real-Life Example":
 
             prompt = f"""
 Provide one realistic real-world example that demonstrates "{topic}".
 
-Explain the scenario.
+Explain:
 
-How the concept is applied.
+Scenario
 
-Why it is useful.
+How the concept is applied
 
-Benefits it provides.
+Benefits
 
-Lessons the learner should take away.
+Why it is useful
+
+Lessons learned.
 """
 
-        elif option == "Generate Quiz":
+        elif activity == "Generate Quiz":
 
             prompt = f"""
-Create a quiz on "{topic}" consisting of 10 questions.
+Create a quiz on "{topic}".
 
-Include:
+Generate:
 
-• Multiple Choice Questions
+4 Multiple Choice Questions
 
-• True/False Questions
+3 True/False Questions
 
-• Short Answer Questions
+3 Short Answer Questions
 
-After all questions provide correct answers with brief explanations.
+After the questions provide:
+
+Correct Answers
+
+Brief Explanation for each answer.
 """
 
-        elif option == "Evaluate Learner Answer":
+        elif activity == "Evaluate Learner Answer":
 
             prompt = f"""
 You are an experienced instructor.
 
-Evaluate the learner's answer about "{topic}".
+Evaluate the learner's answer.
 
-Learner's Answer:
+Topic:
+
+{topic}
+
+Learner Answer:
 
 {learner_answer}
 
@@ -110,33 +150,36 @@ Completeness
 
 Clarity
 
-Give a score out of 10.
+Give score out of 10.
 
-Identify strengths.
+Strengths
 
-Explain mistakes.
+Mistakes
 
-Provide suggestions for improvement.
+Suggestions
 
-Finally provide a model answer.
+Model Answer
 """
 
         else:
 
             prompt = f"""
-You are CyberSage AI, an expert mentor for cybersecurity and artificial intelligence.
+You are CyberSage AI,
+an expert mentor for Cybersecurity and Artificial Intelligence.
 
-Teach the learner about "{topic}" from beginner to advanced level.
+Teach the learner about
 
-Follow this sequence:
+"{topic}"
 
-1. Introduce the topic.
+Follow this sequence.
 
-2. Explain the fundamentals in simple language.
+1. Introduce topic.
 
-3. Provide one real-life example.
+2. Explain fundamentals.
 
-4. Explain important concepts step by step.
+3. Give one real-life example.
+
+4. Explain important concepts.
 
 5. Ask interactive questions.
 
@@ -144,22 +187,47 @@ Follow this sequence:
 
 7. Evaluate learner responses.
 
-8. Generate a short quiz with answers.
+8. Generate quiz with answers.
 
 9. Recommend learning resources.
 
 10. End with summary and key takeaways.
 
-Use simple language and encourage the learner throughout.
+Use beginner-friendly language.
 """
 
-        response = model.generate_content(prompt)
+        try:
 
-        st.session_state.response = response.text
+            with st.spinner("Generating..."):
 
-# Display output
+                response = model.generate_content(prompt)
+
+                st.session_state.response = response.text
+
+        except Exception as e:
+
+            st.error(e)
+
+# -----------------------------
+# Output
+# -----------------------------
 if st.session_state.response:
+
+    st.markdown("## Response")
+
     st.markdown(st.session_state.response)
 
+# -----------------------------
+# Clear Button
+# -----------------------------
+if st.button("Clear Output"):
+
+    st.session_state.response = ""
+
+    st.rerun()
+
+# -----------------------------
+# Footer
+# -----------------------------
 st.markdown("---")
 st.caption("Created by Rishi | CyberSage AI Learning Buddy")
